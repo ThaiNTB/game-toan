@@ -1,10 +1,41 @@
-services:
-  - type: web
-    name: game-toan
-    env: python
-    plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: streamlit run app.py --server.port=$PORT --server.address=0.0.0.0
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.10
+title: "Game Học Toán Cấp 1 🎓"
+icon: "📚"
+layout: "centered"
+levels:
+  - 1
+  - 2
+  - 3
+question_logic:
+  level_1:
+    operations: ["+", "-"]
+    range: [1, 10]
+  level_2:
+    operations: ["+", "-", "*"]
+    range: [2, 20]
+  level_3:
+    operations: ["+", "-", "*", "/"]
+    a_multiplier: [2, 10]
+    b_range: [1, 10]
+rules:
+  max_questions: 10
+  max_attempts_per_question: 3
+  explanation_after_attempts: 3
+behavior:
+  correct:
+    show_next_button: true
+    add_score: true
+  wrong:
+    retry_until_correct: true
+    show_explanation_after: 3
+restart_button: "🔁 Chơi lại"
+start_button: "🎮 Bắt đầu chơi"
+answer_button: "✅ Trả lời"
+next_button: "➡️ Câu tiếp theo"
+style:
+  font_size:
+    question: 40px
+    button: 26px
+    input: 28px
+  colors:
+    primary: "#4CAF50"
+    text: "#333"
