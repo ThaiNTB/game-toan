@@ -1,8 +1,9 @@
 services:
   - type: web
-    name: game-toan
+    name: math-game
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: streamlit run app.py --server.port=$PORT --server.address=0.0.0.0
-    plan: free
-    region: oregon
+    startCommand: streamlit run app.py --server.port=$PORT
+    envVars:
+      - key: PORT
+        value: 10000
