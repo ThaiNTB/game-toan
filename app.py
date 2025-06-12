@@ -1,6 +1,5 @@
 import streamlit as st
 import random
-import time
 
 st.set_page_config(page_title="Game Học Toán Cấp 1 🎓", page_icon="📚", layout="centered")
 
@@ -15,8 +14,9 @@ if "score" not in st.session_state:
     st.session_state.total = 0
     st.session_state.question = ""
     st.session_state.answer = 0
-    st.session_state.feedback = ""
-    st.session_state.feedback_type = ""
+    st.session_state.explanation = ""
+    st.session_state.last_answered = False
+    st.session_state.correct = False
 
 def generate_question(level):
     if level == 1:
@@ -36,7 +36,8 @@ def generate_question(level):
 
     question = f"{a} {op} {b}"
     answer = int(eval(question))
-    return question, answer
+    explanation = f"Vì {question} = {answer}"
+    return question, answer, explanation
 
 st.markdown("""
     <style>
@@ -64,25 +65,29 @@ st.markdown("""
 if st.session_state.total == 0:
     st.session_state.level = st.radio("Chọn cấp độ", [1, 2, 3], horizontal=True)
     if st.button("🎮 Bắt đầu chơi"):
-        st.session_state.question, st.session_state.answer = generate_question(st.session_state.level)
+        q, a, exp = generate_question(st.session_state.level)
+        st.session_state.question = q
+        st.session_state.answer = a
+        st.session_state.explanation = exp
         st.session_state.total = 1
+        st.session_state.last_answered = False
+        st.session_state.correct = False
 else:
-    st.markdown(f"<div class='question-box'>Câu {st.session_state.total}/10: {st.session_state.question} = ?</div>", unsafe_allow_html=True)
-    user_answer = st.text_input("Nhập đáp án của bạn", key="answer_input")
+    if not st.session_state.last_answered or not st.session_state.correct:
+        st.markdown(f"<div class='question-box'>Câu {st.session_state.total}/10: {st.session_state.question} = ?</div>", unsafe_allow_html=True)
+        user_answer = st.text_input("Nhập đáp án của bạn", key="answer_input")
 
-    if st.button("✅ Trả lời"):
-        if user_answer.strip().isdigit() and int(user_answer) == st.session_state.answer:
-            st.session_state.feedback = "🎉 Đúng rồi!"
-            st.session_state.feedback_type = "success"
-            st.session_state.score += 1
-        else:
-            st.session_state.feedback = f"❌ Sai rồi! Đáp án đúng là {st.session_state.answer}"
-            st.session_state.feedback_type = "error"
-
-        st.session_state.show_feedback = True
-
-        time.sleep(0.5)
-
+        if st.button("✅ Trả lời"):
+            if user_answer.strip().isdigit() and int(user_answer) == st.session_state.answer:
+                st.success("🎉 Đúng rồi!")
+                st.session_state.score += 1
+                st.session_state.correct = True
+                st.session_state.last_answered = True
+            else:
+                st.error(f"❌ Sai rồi! {st.session_state.explanation}")
+                st.session_state.correct = False
+                st.session_state.last_answered = True
+    else:
         if st.session_state.total == 10:
             st.markdown(f"<div class='score-text'>🏁 Kết thúc! Bạn đúng {st.session_state.score}/10 câu.</div>", unsafe_allow_html=True)
             if st.button("🔁 Chơi lại"):
@@ -90,12 +95,11 @@ else:
                     del st.session_state[key]
                 st.experimental_rerun()
         else:
-            st.session_state.total += 1
-            st.session_state.question, st.session_state.answer = generate_question(st.session_state.level)
-
-    if st.session_state.get("show_feedback"):
-        if st.session_state.feedback_type == "success":
-            st.success(st.session_state.feedback)
-        elif st.session_state.feedback_type == "error":
-            st.error(st.session_state.feedback)
-        st.session_state.show_feedback = False
+            if st.button("➡️ Câu tiếp theo"):
+                st.session_state.total += 1
+                q, a, exp = generate_question(st.session_state.level)
+                st.session_state.question = q
+                st.session_state.answer = a
+                st.session_state.explanation = exp
+                st.session_state.last_answered = False
+                st.session_state.correct = False
