@@ -17,6 +17,7 @@ if "score" not in st.session_state:
     st.session_state.explanation = ""
     st.session_state.last_answered = False
     st.session_state.correct = False
+    st.session_state.user_input = ""
 
 def generate_question(level):
     if level == 1:
@@ -72,13 +73,15 @@ if st.session_state.total == 0:
         st.session_state.total = 1
         st.session_state.last_answered = False
         st.session_state.correct = False
+        st.session_state.user_input = ""
 else:
     if not st.session_state.last_answered or not st.session_state.correct:
         st.markdown(f"<div class='question-box'>Câu {st.session_state.total}/10: {st.session_state.question} = ?</div>", unsafe_allow_html=True)
-        user_answer = st.text_input("Nhập đáp án của bạn", key="answer_input")
+        st.session_state.user_input = st.text_input("Nhập đáp án của bạn", value=st.session_state.user_input, key="answer_input")
 
         if st.button("✅ Trả lời"):
-            if user_answer.strip().isdigit() and int(user_answer) == st.session_state.answer:
+            user_answer = st.session_state.user_input.strip()
+            if user_answer.isdigit() and int(user_answer) == st.session_state.answer:
                 st.success("🎉 Đúng rồi!")
                 st.session_state.score += 1
                 st.session_state.correct = True
@@ -103,3 +106,4 @@ else:
                 st.session_state.explanation = exp
                 st.session_state.last_answered = False
                 st.session_state.correct = False
+                st.session_state.user_input = ""
