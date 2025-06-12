@@ -8,6 +8,7 @@ st.markdown("""
     <hr style='border: 2px solid #4CAF50;'>
 """, unsafe_allow_html=True)
 
+# Khởi tạo session_state
 if "score" not in st.session_state:
     st.session_state.level = 1
     st.session_state.score = 0
@@ -15,10 +16,11 @@ if "score" not in st.session_state:
     st.session_state.question = ""
     st.session_state.answer = 0
     st.session_state.explanation = ""
-    st.session_state.last_answered = False
     st.session_state.correct = False
     st.session_state.user_input = ""
+    st.session_state.attempts = 0
 
+# Hàm tạo câu hỏi
 def generate_question(level):
     if level == 1:
         a, b = random.randint(1, 10), random.randint(1, 10)
@@ -40,10 +42,10 @@ def generate_question(level):
     explanation = f"Vì {question} = {answer}"
     return question, answer, explanation
 
+# CSS làm đẹp
 st.markdown("""
     <style>
     .stRadio > div { flex-direction: row !important; justify-content: center; }
-    .big-font { font-size: 28px !important; }
     .question-box { font-size: 40px; font-weight: bold; color: #333; text-align: center; margin: 20px 0; }
     .score-text { font-size: 26px; font-weight: bold; text-align: center; margin: 20px 0; }
     .stButton button {
@@ -63,6 +65,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Bắt đầu trò chơi
 if st.session_state.total == 0:
     st.session_state.level = st.radio("Chọn cấp độ", [1, 2, 3], horizontal=True)
     if st.button("🎮 Bắt đầu chơi"):
@@ -71,25 +74,28 @@ if st.session_state.total == 0:
         st.session_state.answer = a
         st.session_state.explanation = exp
         st.session_state.total = 1
-        st.session_state.last_answered = False
         st.session_state.correct = False
         st.session_state.user_input = ""
+        st.session_state.attempts = 0
 else:
-    if not st.session_state.last_answered or not st.session_state.correct:
-        st.markdown(f"<div class='question-box'>Câu {st.session_state.total}/10: {st.session_state.question} = ?</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='question-box'>Câu {st.session_state.total}/10: {st.session_state.question} = ?</div>", unsafe_allow_html=True)
+
+    if not st.session_state.correct:
         st.session_state.user_input = st.text_input("Nhập đáp án của bạn", value=st.session_state.user_input, key="answer_input")
 
         if st.button("✅ Trả lời"):
-            user_answer = st.session_state.user_input.strip()
-            if user_answer.isdigit() and int(user_answer) == st.session_state.answer:
+            ans = st.session_state.user_input.strip()
+            if ans.isdigit() and int(ans) == st.session_state.answer:
                 st.success("🎉 Đúng rồi!")
                 st.session_state.score += 1
                 st.session_state.correct = True
-                st.session_state.last_answered = True
             else:
-                st.error(f"❌ Sai rồi! {st.session_state.explanation}")
-                st.session_state.correct = False
-                st.session_state.last_answered = True
+                st.session_state.attempts += 1
+                if st.session_state.attempts >= 3:
+                    st.error(f"❌ Sai rồi! {st.session_state.explanation}")
+                else:
+                    st.error(f"❌ Sai rồi! Hãy thử lại.")
+
     else:
         if st.session_state.total == 10:
             st.markdown(f"<div class='score-text'>🏁 Kết thúc! Bạn đúng {st.session_state.score}/10 câu.</div>", unsafe_allow_html=True)
@@ -104,6 +110,6 @@ else:
                 st.session_state.question = q
                 st.session_state.answer = a
                 st.session_state.explanation = exp
-                st.session_state.last_answered = False
                 st.session_state.correct = False
                 st.session_state.user_input = ""
+                st.session_state.attempts = 0
