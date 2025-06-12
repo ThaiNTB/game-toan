@@ -1,73 +1,101 @@
 import streamlit as st
 import random
+import time
 
-# Hàm sinh câu hỏi theo cấp độ
+st.set_page_config(page_title="Game Học Toán Cấp 1 🎓", page_icon="📚", layout="centered")
+
+st.markdown("""
+    <h1 style='text-align: center; color: #4CAF50; font-size: 48px;'>🎓 Game Học Toán Cấp 1</h1>
+    <hr style='border: 2px solid #4CAF50;'>
+""", unsafe_allow_html=True)
+
+if "score" not in st.session_state:
+    st.session_state.level = 1
+    st.session_state.score = 0
+    st.session_state.total = 0
+    st.session_state.question = ""
+    st.session_state.answer = 0
+    st.session_state.feedback = ""
+    st.session_state.feedback_type = ""
+
 def generate_question(level):
-    if level == "Lv1":
-        op = random.choice(['+', '-', '*'])
-        a = random.randint(1, 10)
-        b = random.randint(1, 10)
+    if level == 1:
+        a, b = random.randint(1, 10), random.randint(1, 10)
+        op = random.choice(['+', '-'])
         if op == '-' and a < b:
             a, b = b, a
-    elif level == "Lv2":
-        op = random.choice(['+', '-', '*', '/'])
-        a = random.randint(1, 20)
+    elif level == 2:
+        a, b = random.randint(2, 20), random.randint(2, 20)
+        op = random.choice(['+', '-', '*'])
+        if op == '-' and a < b:
+            a, b = b, a
+    else:
         b = random.randint(1, 10)
-        if op == '-':
-            if a < b:
-                a, b = b, a
-        if op == '/':
-            a = b * random.randint(1, 10)
-    elif level == "Lv3":
+        a = b * random.randint(2, 10)
         op = random.choice(['+', '-', '*', '/'])
-        a = random.randint(-20, 20)
-        b = random.randint(1, 10)
-        if op == '/':
-            a = b * random.randint(-10, 10)
 
     question = f"{a} {op} {b}"
-    try:
-        answer = eval(question)
-        if op == '/':
-            answer = round(answer, 2)
-    except ZeroDivisionError:
-        return generate_question(level)
+    answer = int(eval(question))
     return question, answer
 
-# Cấu hình trang
-st.set_page_config(page_title="🧠 Game Toán Cấp 1", page_icon="🔢")
-st.title("🧠 Game Toán 3 Cấp Độ")
-st.write("Chọn cấp độ và trả lời các phép toán!")
+st.markdown("""
+    <style>
+    .stRadio > div { flex-direction: row !important; justify-content: center; }
+    .big-font { font-size: 28px !important; }
+    .question-box { font-size: 40px; font-weight: bold; color: #333; text-align: center; margin: 20px 0; }
+    .score-text { font-size: 26px; font-weight: bold; text-align: center; margin: 20px 0; }
+    .stButton button {
+        font-size: 26px;
+        padding: 15px 40px;
+        border-radius: 12px;
+        background-color: #4CAF50;
+        color: white;
+        margin-top: 10px;
+    }
+    input[type="text"] {
+        font-size: 28px;
+        text-align: center;
+        height: 60px;
+        border-radius: 8px;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-# Chọn cấp độ
-level = st.selectbox("🎚️ Chọn cấp độ:", ["Lv1", "Lv2", "Lv3"])
+if st.session_state.total == 0:
+    st.session_state.level = st.radio("Chọn cấp độ", [1, 2, 3], horizontal=True)
+    if st.button("🎮 Bắt đầu chơi"):
+        st.session_state.question, st.session_state.answer = generate_question(st.session_state.level)
+        st.session_state.total = 1
+else:
+    st.markdown(f"<div class='question-box'>Câu {st.session_state.total}/10: {st.session_state.question} = ?</div>", unsafe_allow_html=True)
+    user_answer = st.text_input("Nhập đáp án của bạn", key="answer_input")
 
-# Khởi tạo trạng thái
-if 'score' not in st.session_state:
-    st.session_state.score = 0
-if 'level' not in st.session_state or st.session_state.level != level:
-    st.session_state.level = level
-    st.session_state.score = 0
-    st.session_state.question, st.session_state.answer = generate_question(level)
-
-# Hiện câu hỏi
-st.markdown(f"### Câu hỏi: `{st.session_state.question}`")
-user_answer = st.text_input("✍️ Nhập đáp án:")
-
-# Kiểm tra và sinh câu hỏi mới
-if st.button("Trả lời"):
-    try:
-        ans = float(user_answer)
-        correct = round(ans, 2) == round(st.session_state.answer, 2)
-        if correct:
-            st.success("✅ Chính xác!")
+    if st.button("✅ Trả lời"):
+        if user_answer.strip().isdigit() and int(user_answer) == st.session_state.answer:
+            st.session_state.feedback = "🎉 Đúng rồi!"
+            st.session_state.feedback_type = "success"
             st.session_state.score += 1
         else:
-            st.error(f"❌ Sai! Đáp án đúng là `{st.session_state.answer}`")
-        st.session_state.question, st.session_state.answer = generate_question(level)
-        st.experimental_rerun()
-    except:
-        st.warning("⚠️ Hãy nhập một số hợp lệ.")
+            st.session_state.feedback = f"❌ Sai rồi! Đáp án đúng là {st.session_state.answer}"
+            st.session_state.feedback_type = "error"
 
-# Hiển thị điểm
-st.markdown(f"**🎯 Điểm của bạn:** `{st.session_state.score}`")
+        st.session_state.show_feedback = True
+
+        time.sleep(0.5)
+
+        if st.session_state.total == 10:
+            st.markdown(f"<div class='score-text'>🏁 Kết thúc! Bạn đúng {st.session_state.score}/10 câu.</div>", unsafe_allow_html=True)
+            if st.button("🔁 Chơi lại"):
+                for key in list(st.session_state.keys()):
+                    del st.session_state[key]
+                st.experimental_rerun()
+        else:
+            st.session_state.total += 1
+            st.session_state.question, st.session_state.answer = generate_question(st.session_state.level)
+
+    if st.session_state.get("show_feedback"):
+        if st.session_state.feedback_type == "success":
+            st.success(st.session_state.feedback)
+        elif st.session_state.feedback_type == "error":
+            st.error(st.session_state.feedback)
+        st.session_state.show_feedback = False
